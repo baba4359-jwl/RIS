@@ -1,0 +1,47 @@
+알겠습니다. 직접 작업하실 수 있도록 복사해서 쓸 수 있는 가이드만 정리해 드릴게요. 순서대로 따라가시면 됩니다.
+
+0단계: Gemini API 키 즉시 폐기 ⚠️
+아래 키가 이미 git에 들어있으니, 지금 당장 폐기해야 합니다. (Ollama 전환했으니 이 키는 더 이상 안 씀)
+
+AIzaSyC-So5BN2X2vSzydz72rSF3PQ8JiUOUn2I  ← 이 키 폐기
+→ Google AI Studio › API keys 에서 해당 키 Delete
+
+1단계: .gitignore 만들기
+프로젝트 루트(c:\Projects\RIS\.gitignore)에 다음 내용으로 새 파일 생성:
+
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Vector store (regenerated on first run)
+db/
+# Source PDFs (user-supplied; respect copyright)
+data/pdfs/*.pdf
+!data/pdfs/.gitkeep
+# Model caches (HuggingFace, sentence-transformers)
+.cache/
+~/.cache/huggingface/
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+# Streamlit
+.streamlit/secrets.toml
+# Jupyter
+.ipynb_checkpoints/
