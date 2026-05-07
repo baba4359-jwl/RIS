@@ -58,6 +58,20 @@ exit /b 1
 :python_ok
 echo  [1/4] Python !PYTHON_VER! found.
 
+REM Require 64-bit Python (chroma-hnswlib has no 32-bit pre-built wheel)
+!PYTHON_CMD! -c "import struct; exit(0 if struct.calcsize('P')*8==64 else 1)" >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo  [ERROR] 32-bit Python detected. This app requires 64-bit Python.
+    echo.
+    echo  Please install Python 3.12 64-bit from:
+    echo    https://www.python.org/downloads/release/python-3129/
+    echo  Download: python-3.12.9-amd64.exe
+    echo.
+    pause
+    exit /b 1
+)
+
 REM ?? Step 2: Virtual environment ??????????????????????????????????????????????
 if not exist ".venv\" (
     echo  [2/4] Creating virtual environment...
