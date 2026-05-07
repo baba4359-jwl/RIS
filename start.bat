@@ -24,7 +24,7 @@ REM Method 1: winget
 winget --version >nul 2>&1
 if not errorlevel 1 (
     echo       Installing via winget...
-    winget install Python.Python.3.12 --silent --scope user --accept-source-agreements --accept-package-agreements
+    winget install Python.Python.3.11 --silent --scope user --accept-source-agreements --accept-package-agreements
     call :refresh_path
     call :detect_python
     if defined PYTHON_CMD echo       Python !PYTHON_VER! verified after winget install.
@@ -32,9 +32,9 @@ if not errorlevel 1 (
 
 REM Method 2: Direct download
 if defined PYTHON_CMD goto :python_ok
-echo       Downloading Python 3.12 installer...
+echo       Downloading Python 3.11 installer...
 set "PYINST=%TEMP%\python_setup.exe"
-powershell -NoProfile -Command "Invoke-WebRequest 'https://www.python.org/ftp/python/3.12.9/python-3.12.9-amd64.exe' -OutFile '!PYINST!' -UseBasicParsing" >nul 2>&1
+powershell -NoProfile -Command "Invoke-WebRequest 'https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe' -OutFile '!PYINST!' -UseBasicParsing" >nul 2>&1
 if not exist "!PYINST!" goto :no_python
 echo       Running installer (user-level, no admin required)...
 "!PYINST!" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0
@@ -73,6 +73,15 @@ if errorlevel 1 (
 )
 
 REM ?? Step 2: Virtual environment ??????????????????????????????????????????????
+REM If existing venv is 32-bit, delete it so it gets recreated with 64-bit Python
+if exist ".venv\Scripts\python.exe" (
+    ".venv\Scripts\python.exe" -c "import struct; exit(0 if struct.calcsize('P')*8==64 else 1)" >nul 2>&1
+    if errorlevel 1 (
+        echo  [AUTO] Removing 32-bit virtual environment -- will recreate with 64-bit Python...
+        rmdir /s /q .venv
+    )
+)
+
 if not exist ".venv\" (
     echo  [2/4] Creating virtual environment...
     !PYTHON_CMD! -m venv .venv
@@ -86,18 +95,6 @@ if not exist ".venv\" (
 )
 
 call .venv\Scripts\activate.bat
-
-REM Re-check 64-bit after activation (venv may have been created with old 32-bit Python)
-python -c "import struct; exit(0 if struct.calcsize('P')*8==64 else 1)" >nul 2>&1
-if errorlevel 1 (
-    echo.
-    echo  [ERROR] The .venv folder was created with 32-bit Python.
-    echo  Please delete the .venv folder and re-run this file.
-    echo  Make sure Python 3.12 64-bit is installed: python-3.12.9-amd64.exe
-    echo.
-    pause
-    exit /b 1
-)
 
 REM Upgrade pip inside venv before installing packages
 python -m pip install --upgrade pip -q
@@ -146,9 +143,9 @@ goto :eof
 REM ?? Subroutines ??????????????????????????????????????????????????????????????
 
 :check_ver
-REM Exit /b 0 if 3.10 <= version <= 3.12, else exit /b 1
-REM Upper bound: chroma-hnswlib has no pre-built wheel for 3.13+,
-REM causing source compilation to fail on Windows without build tools.
+REM Exit /b 0 if 3.10 <= version <= 3.11, else exit /b 1
+REM Upper bound 3.11: chroma-hnswlib==0.7.6 has no Windows wheel for Python 3.12+,
+REM causing source compilation to fail on Windows without C++ Build Tools.
 set "_CV=%~1"
 set "_MAJ=0"
 set "_MIN=0"
@@ -156,7 +153,7 @@ for /f "tokens=1,2 delims=." %%a in ("!_CV!") do (
     set /a "_MAJ=%%a" 2>nul
     set /a "_MIN=%%b" 2>nul
 )
-if !_MAJ! EQU 3 if !_MIN! GEQ 10 if !_MIN! LEQ 12 exit /b 0
+if !_MAJ! EQU 3 if !_MIN! GEQ 10 if !_MIN! LEQ 11 exit /b 0
 exit /b 1
 
 :refresh_path

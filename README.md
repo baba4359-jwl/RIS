@@ -30,11 +30,11 @@ Git이 없으면 아래 링크에서 설치합니다.
 
 ### 2단계 — Python 3.12 설치
 
-아래 링크에서 Python **3.12 64-bit** 설치 파일을 내려받아 실행합니다.
+아래 링크에서 Python **3.11 64-bit** 설치 파일을 내려받아 실행합니다.
 
-> https://www.python.org/downloads/release/python-3129/
+> https://www.python.org/downloads/release/python-3119/
 >
-> 파일명: **`python-3.12.9-amd64.exe`** (`amd64` = 64-bit, 이 파일을 받아야 합니다)
+> 파일명: **`python-3.11.9-amd64.exe`** (`amd64` = 64-bit, 이 파일을 받아야 합니다)
 >
 > 설치 화면 하단의 **"Add Python to PATH"** 에 반드시 체크한 뒤 설치합니다.
 
