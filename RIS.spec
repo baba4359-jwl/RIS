@@ -3,12 +3,16 @@
 PyInstaller spec for RIS (PDF Research Intelligence System).
 Run from within the project venv:  pyinstaller RIS.spec --noconfirm
 """
+import importlib.util
 from pathlib import Path
-import streamlit as st
-import chromadb
 
-streamlit_dir = Path(st.__file__).parent
-chromadb_dir  = Path(chromadb.__file__).parent
+def _pkg_dir(name: str) -> Path:
+    """Locate a package directory without executing its __init__.py."""
+    spec = importlib.util.find_spec(name)
+    return Path(spec.submodule_search_locations[0])
+
+streamlit_dir = _pkg_dir("streamlit")
+chromadb_dir  = _pkg_dir("chromadb")
 
 block_cipher = None
 
