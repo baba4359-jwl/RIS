@@ -1,58 +1,57 @@
 @echo off
-chcp 65001 >nul
-title RIS 빌드
+setlocal
+title RIS Build
 
 echo.
 echo  ================================================
-echo   RIS Windows 애플리케이션 빌드
+echo   RIS - Windows Application Build
 echo  ================================================
 echo.
 
-REM ── 가상환경 확인 ────────────────────────────────────
+REM ── Check virtual environment ─────────────────────────
 if not exist ".venv\Scripts\activate.bat" (
-    echo [오류] .venv가 없습니다. start.bat을 먼저 실행하여 환경을 설정하세요.
+    echo [ERROR] .venv not found. Run start.bat first to set up the environment.
     pause
     exit /b 1
 )
 call .venv\Scripts\activate.bat
 
-REM ── PyInstaller 설치 ─────────────────────────────────
+REM ── Install PyInstaller ───────────────────────────────
 python -c "import PyInstaller" >nul 2>&1
 if errorlevel 1 (
-    echo PyInstaller 설치 중...
+    echo Installing PyInstaller...
     pip install pyinstaller -q
 )
 
-REM ── 빌드 실행 ────────────────────────────────────────
-echo 빌드 중... (처음 실행 시 5-10분 소요)
+REM ── Build ─────────────────────────────────────────────
+echo Building... (first run may take 5-10 minutes)
 echo.
 pyinstaller RIS.spec --noconfirm
 
 if not exist "dist\RIS\RIS.exe" (
     echo.
-    echo  ❌ 빌드 실패. 위 오류 메시지를 확인하세요.
+    echo [ERROR] Build failed. Check the error messages above.
     pause
     exit /b 1
 )
 
-REM ── .env 복사 ─────────────────────────────────────────
+REM ── Copy .env ─────────────────────────────────────────
 echo.
-echo [배포 파일 준비 중...]
+echo Preparing distribution files...
 if exist ".env" (
     copy .env "dist\RIS\.env" >nul
-    echo  .env 복사 완료
+    echo  .env copied.
 ) else (
-    echo  [주의] .env 파일이 없습니다. dist\RIS\.env 를 직접 생성하세요.
+    echo  [WARNING] .env not found. Add dist\RIS\.env manually before distributing.
 )
 
-REM ── db 폴더 생성 ──────────────────────────────────────
 if not exist "dist\RIS\db\" mkdir "dist\RIS\db"
 
 echo.
-echo  ✅ 빌드 완료!
+echo  Build complete!
 echo.
-echo  배포 방법:
-echo   dist\RIS\ 폴더 전체를 zip으로 압축하여 전달하세요.
-echo   사용자는 압축 해제 후 RIS.exe 를 더블클릭하면 됩니다.
+echo  How to distribute:
+echo   Zip the entire dist\RIS\ folder and send to users.
+echo   Users double-click RIS.exe to launch.
 echo.
 pause
