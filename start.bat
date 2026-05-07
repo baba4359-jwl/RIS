@@ -157,8 +157,9 @@ goto :eof
 REM ?? Subroutines ??????????????????????????????????????????????????????????????
 
 :check_ver
-REM Exit /b 0 if 3.10 <= version <= 3.13, else exit /b 1
-REM Upper bound: chromadb 0.5.23 and sentence-transformers lack wheels for 3.14+
+REM Exit /b 0 if 3.10 <= version <= 3.12, else exit /b 1
+REM Upper bound: chroma-hnswlib has no pre-built wheel for 3.13+,
+REM causing source compilation to fail on Windows without build tools.
 set "_CV=%~1"
 set "_MAJ=0"
 set "_MIN=0"
@@ -166,7 +167,7 @@ for /f "tokens=1,2 delims=." %%a in ("!_CV!") do (
     set /a "_MAJ=%%a" 2>nul
     set /a "_MIN=%%b" 2>nul
 )
-if !_MAJ! EQU 3 if !_MIN! GEQ 10 if !_MIN! LEQ 13 exit /b 0
+if !_MAJ! EQU 3 if !_MIN! GEQ 10 if !_MIN! LEQ 12 exit /b 0
 exit /b 1
 
 :refresh_path
