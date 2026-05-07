@@ -29,7 +29,7 @@ if exist "dist\RIS\RIS.exe" del "dist\RIS\RIS.exe"
 REM Build
 echo Building... (first run may take 5-10 minutes^)
 echo.
-pyinstaller RIS.spec --noconfirm
+pyinstaller RIS.spec --noconfirm --clean
 if errorlevel 1 (
     echo.
     echo [ERROR] PyInstaller exited with an error. Check messages above.
