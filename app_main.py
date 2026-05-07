@@ -72,13 +72,6 @@ def main():
     with st.sidebar:
         st.header("⚙️ Settings")
 
-        st.subheader("⚡ Groq API")
-        groq_api_key = st.text_input(
-            "API Key",
-            value=os.getenv("GROQ_API_KEY", ""),
-            type="password",
-            help="Free tier at console.groq.com — no GPU needed.",
-        )
         env_groq_model = os.getenv("GROQ_MODEL", GROQ_DEFAULT_MODEL)
         default_groq_idx = (
             GROQ_FREE_MODELS.index(env_groq_model)
@@ -91,7 +84,6 @@ def main():
             index=default_groq_idx,
             help="llama-3.1-8b-instant is fastest; llama-3.3-70b-versatile is highest quality.",
         )
-        st.caption("⚡ Cloud inference — responses in 1–3 seconds")
 
         st.divider()
 
@@ -173,11 +165,9 @@ def main():
     if not question:
         return
 
+    groq_api_key = os.getenv("GROQ_API_KEY", "")
     if not groq_api_key:
-        st.error(
-            "Groq API 키를 사이드바에 입력하세요. "
-            "[console.groq.com](https://console.groq.com)에서 무료로 발급받을 수 있습니다."
-        )
+        st.error("서버에 GROQ_API_KEY가 설정되어 있지 않습니다. 관리자에게 문의하세요.")
         return
 
     with st.chat_message("user"):
