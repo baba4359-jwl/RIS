@@ -28,26 +28,47 @@ Git이 없으면 아래 링크에서 설치합니다.
 
 설치 후 바탕화면 또는 원하는 폴더에서 **우클릭 → "Open Git Bash here"** 를 선택합니다.
 
-### 2단계 — 프로젝트 다운로드
+### 2단계 — Python 3.12 설치
 
-Git Bash (또는 cmd / PowerShell) 에서 아래 명령어를 실행합니다.
+아래 링크에서 Python **3.12** 설치 파일을 내려받아 실행합니다.
+
+> https://www.python.org/downloads/release/python-3129/
+>
+> 설치 화면 하단의 **"Add Python to PATH"** 에 반드시 체크한 뒤 설치합니다.
+
+설치 후 cmd(명령 프롬프트)에서 버전을 확인합니다.
+
+```cmd
+python --version
+```
+
+`Python 3.12.x` 가 출력되면 정상입니다.
+
+### 3단계 — 프로젝트 다운로드
+
+cmd 또는 Git Bash 에서 아래 명령어를 실행합니다.
 
 ```bash
 git clone https://github.com/baba4359-jwl/RIS
 cd RIS
 ```
 
-### 3단계 — start.bat 실행
+### 4단계 — 패키지 설치
 
-탐색기에서 `RIS` 폴더를 열고 **`start.bat`을 더블클릭**합니다.
+프로젝트 폴더 안에서 아래 명령어를 순서대로 실행합니다 **(최초 1회, 약 5~10분 소요)**.
 
-> **Python이 없어도 괜찮습니다.**
-> start.bat이 Python 3.12를 자동으로 설치합니다.
-> (winget → 직접 다운로드 순서로 시도, 관리자 권한 불필요)
+```cmd
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install --prefer-binary -r requirements.txt
+```
 
-### 4단계 — API 키 입력 (최초 1회)
+> 설치 중 오류가 발생하면 Python 버전이 3.12.x인지, PATH가 올바르게 설정됐는지 확인합니다.
 
-처음 실행 시 아래 두 가지 무료 API 키를 입력하라는 메시지가 나옵니다.
+### 5단계 — API 키 입력 (최초 1회)
+
+`start.bat`을 처음 실행하면 아래 두 가지 무료 API 키를 입력하라는 메시지가 나옵니다.
 
 | 서비스 | 용도 | 발급 주소 |
 |---|---|---|
@@ -56,10 +77,10 @@ cd RIS
 
 두 서비스 모두 회원가입 후 무료로 발급 가능합니다.
 
-### 5단계 — 완료
+### 6단계 — 앱 실행
 
-키 입력이 끝나면 패키지 설치가 시작됩니다 **(최초 1회, 약 5~10분 소요)**.
-설치가 완료되면 브라우저가 자동으로 열리고 앱이 실행됩니다.
+탐색기에서 `RIS` 폴더를 열고 **`start.bat`을 더블클릭**합니다.  
+브라우저가 자동으로 열리고 앱이 실행됩니다.
 
 > **두 번째 실행부터는** `start.bat` 더블클릭만 하면 바로 시작됩니다.
 
