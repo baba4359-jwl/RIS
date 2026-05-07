@@ -1,6 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 title PDF Research Intelligence
+cd /d "%~dp0"
 
 echo.
 echo  ================================================
