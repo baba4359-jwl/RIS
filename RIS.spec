@@ -5,6 +5,7 @@ Run from within the project venv:  pyinstaller RIS.spec --noconfirm
 """
 import importlib.util
 from pathlib import Path
+from PyInstaller.utils.hooks import copy_metadata
 
 def _pkg_dir(name: str) -> Path:
     """Locate a package directory without executing its __init__.py."""
@@ -16,11 +17,25 @@ chromadb_dir  = _pkg_dir("chromadb")
 
 block_cipher = None
 
+# copy_metadata includes .dist-info so importlib.metadata.version() works at runtime
+_metadata = (
+    copy_metadata("streamlit") +
+    copy_metadata("chromadb") +
+    copy_metadata("groq") +
+    copy_metadata("voyageai") +
+    copy_metadata("pdfplumber") +
+    copy_metadata("pymupdf") +
+    copy_metadata("rank_bm25") +
+    copy_metadata("nltk") +
+    copy_metadata("click") +
+    copy_metadata("tornado")
+)
+
 a = Analysis(
     ["launcher.py"],
     pathex=["."],
     binaries=[],
-    datas=[
+    datas=_metadata + [
         # Streamlit static assets and runtime
         (str(streamlit_dir / "static"),    "streamlit/static"),
         (str(streamlit_dir / "runtime"),   "streamlit/runtime"),
