@@ -26,7 +26,7 @@ PDF 문헌을 업로드하면 인용과 함께 답변하는 RAG 시스템.
 ## Setup (로컬 실행)
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/baba4359-jwl/RIS
 cd RIS
 python -m venv .venv
 .venv\Scripts\activate      # Windows
