@@ -35,10 +35,10 @@ def _index_uploaded_files(files) -> tuple[int, int]:
     progress.progress(0.40, text="Chunking documents…")
     chunks = chunk_documents(all_docs)
 
-    progress.progress(0.55, text=f"Embedding {len(chunks)} chunks (may take a moment)…")
+    progress.progress(0.55, text=f"Embedding {len(chunks)} chunks…")
     embeddings = embed_texts([c.text for c in chunks])
 
-    progress.progress(0.90, text="Indexing in ChromaDB…")
+    progress.progress(0.92, text="Indexing in ChromaDB…")
     vector_store.upsert(chunks, embeddings, DB_PATH)
 
     progress.progress(1.0, text="Done!")
@@ -131,17 +131,9 @@ def main():
                 st.markdown(f"📄 **{fname}** — {n_pages} pages")
             st.caption(f"Total: {vector_store.count(DB_PATH):,} chunks in vector store")
 
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("Clear Chat", use_container_width=True):
-                    st.session_state.history = []
-                    st.rerun()
-            with col2:
-                if st.button("Reset DB", use_container_width=True, type="secondary"):
-                    vector_store.reset(DB_PATH)
-                    st.session_state.indexed_files = {}
-                    st.session_state.history = []
-                    st.rerun()
+            if st.button("Clear Chat", use_container_width=True):
+                st.session_state.history = []
+                st.rerun()
 
     # ── Main chat area ────────────────────────────────────────────────────────
     if not st.session_state.indexed_files:
@@ -232,8 +224,8 @@ def _render_empty_state():
 | Embeddings | `all-MiniLM-L6-v2` (local, CPU) |
 | Vector store | ChromaDB (persistent, cosine similarity) |
 | Hybrid search | BM25 + semantic via Reciprocal Rank Fusion |
-| Re-ranking | Voyage AI `rerank-2-lite` (cloud API) |
-| Generation | Groq cloud API (citation-grounded, free tier) |
+| Re-ranking | Voyage AI `rerank-2-lite` (API) |
+| Generation | Groq API (citation-grounded) |
         """)
 
 

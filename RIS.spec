@@ -5,7 +5,7 @@ Run from within the project venv:  pyinstaller RIS.spec --noconfirm
 """
 import importlib.util
 from pathlib import Path
-from PyInstaller.utils.hooks import copy_metadata
+from PyInstaller.utils.hooks import copy_metadata, collect_submodules
 
 def _pkg_dir(name: str) -> Path:
     """Locate a package directory without executing its __init__.py."""
@@ -14,6 +14,45 @@ def _pkg_dir(name: str) -> Path:
 
 streamlit_dir = _pkg_dir("streamlit")
 chromadb_dir  = _pkg_dir("chromadb")
+
+# ChromaDB resolves component implementations from string FQNs at runtime
+# (e.g. ``Settings.chroma_api_impl = "chromadb.api.segment.SegmentAPI"``) via
+# ``importlib.import_module``. PyInstaller's static analysis cannot follow
+# these dynamic imports, so we collect every chromadb submodule explicitly.
+# ``collect_submodules`` skips namespace packages (directories without
+# ``__init__.py``), so we additionally walk the package tree and turn every
+# ``.py`` file into an importable module name.
+# Skip test scaffolding and the heavy ONNX default embedding function (the
+# ONNX path is bypassed at runtime by ``src/_chromadb_bundle_compat.py``).
+def _walk_python_modules(pkg_root: Path, top_name: str) -> list[str]:
+    out: list[str] = []
+    for py_file in pkg_root.rglob("*.py"):
+        rel = py_file.relative_to(pkg_root).with_suffix("")
+        parts = rel.parts
+        if parts[-1] == "__init__":
+            parts = parts[:-1]
+        if not parts:
+            out.append(top_name)
+        else:
+            out.append(".".join((top_name, *parts)))
+    return out
+
+
+def _is_excluded_chromadb_module(name: str) -> bool:
+    if name.startswith("chromadb.test"):
+        return True
+    if name == "chromadb.utils.embedding_functions.onnx_mini_lm_l6_v2":
+        return True
+    return False
+
+
+_chromadb_submodules = sorted({
+    m for m in (
+        collect_submodules("chromadb")
+        + _walk_python_modules(chromadb_dir, "chromadb")
+    )
+    if not _is_excluded_chromadb_module(m)
+})
 
 block_cipher = None
 
@@ -58,16 +97,17 @@ a = Analysis(
         "streamlit.components.v1",
         "streamlit.web.cli",
         "streamlit.web.bootstrap",
-        # ChromaDB
-        "chromadb",
-        "chromadb.api",
-        "chromadb.api.client",
-        "chromadb.api.models.Collection",
-        "chromadb.config",
-        "chromadb.telemetry.product.posthog",
         # PDF parsing
         "pdfplumber",
         "pymupdf",
+        "fitz",
+        "fitz.table",
+        "fitz.utils",
+        # Embeddings (local)
+        "sentence_transformers",
+        "torch",
+        "transformers",
+        "huggingface_hub",
         # Retrieval / search
         "rank_bm25",
         "nltk",
@@ -86,10 +126,10 @@ a = Analysis(
         "tornado",
         "tornado.web",
         "tornado.ioloop",
-    ],
+    ] + _chromadb_submodules,
     hookspath=[],
     runtime_hooks=[],
-    excludes=["torch", "tensorflow", "sentence_transformers", "pytest"],
+    excludes=["tensorflow", "pytest"],
     cipher=block_cipher,
     noarchive=False,
 )

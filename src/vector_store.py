@@ -2,10 +2,31 @@ import os
 from pathlib import Path
 
 import chromadb
+from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
 from src.chunking import Chunk
 
 COLLECTION_NAME = "amr_corpus"
+
+
+class _NoOpEmbeddingFunction(EmbeddingFunction[Documents]):
+    """
+    Stub embedding function passed to ChromaDB to bypass its default ONNX
+    embedder. We always supply pre-computed embeddings via Voyage AI in
+    `upsert()`/`query()`, so this is never actually invoked. Avoiding the
+    default also dodges the ``NameError: name 'ONNXMiniLM_L6_V2' is not
+    defined`` that occurs in PyInstaller bundles, where ChromaDB's dynamic
+    ``pkgutil.iter_modules`` discovery cannot register the ONNX class.
+    """
+
+    def __call__(self, input: Documents) -> Embeddings:
+        raise RuntimeError(
+            "ChromaDB embedding function should not be invoked: "
+            "embeddings must be supplied explicitly via Voyage AI."
+        )
+
+
+_NOOP_EF = _NoOpEmbeddingFunction()
 
 
 def _client(db_path: str) -> chromadb.PersistentClient:
@@ -17,6 +38,7 @@ def _collection(client: chromadb.PersistentClient) -> chromadb.Collection:
     return client.get_or_create_collection(
         name=COLLECTION_NAME,
         metadata={"hnsw:space": "cosine"},
+        embedding_function=_NOOP_EF,
     )
 
 

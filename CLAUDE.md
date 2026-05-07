@@ -249,3 +249,15 @@ pytest tests/ -v
 - All LLM calls route through `generation.py` — this is the single point for prompt changes.
 - Do not hardcode API keys anywhere; always read from `.env` via `python-dotenv`.
 - When adding new PDF sources, update `evaluation/eval_pairs.json` with at least one new Q&A pair to maintain evaluation coverage.
+
+## Evaluation Table
+- Create at leatst 5 complex question-answer pairs.
+- Evaluate the system's response qualitatively using the following format
+| Question | Expected Answer | System Response | Result(Hit/Miss) | Comment
+|---|---|---|---|---|
+| (e.g., Trend in X resistance) | (Based on PDF) | (Generated Output) | Hit | Good use of citation |
+
+## Bonus Points for evaluation (Advanced)
+- Implementation of a Re-ranker (e.g., Cohere or Cross-Encoder)
+- Hybrid Search (combining Semantic Search with BM25)
+- Citations: The system returns the specific page number or source filename for its claims

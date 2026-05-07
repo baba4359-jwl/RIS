@@ -1,12 +1,22 @@
 import os
 
-from src.embedding import embed_texts, _get_client
+from src.embedding import embed_texts
 from src import vector_store
 
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", "10"))
 TOP_K_RERANK = int(os.getenv("TOP_K_RERANK", "5"))
 
 VOYAGE_RERANK_MODEL = "rerank-2-lite"
+
+_voyage_client = None
+
+
+def _get_voyage_client():
+    global _voyage_client
+    if _voyage_client is None:
+        import voyageai
+        _voyage_client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
+    return _voyage_client
 
 
 def _rrf(lists: list[list[dict]], k: int = 60) -> list[dict]:
@@ -30,7 +40,7 @@ def retrieve(
 ) -> list[dict]:
     from rank_bm25 import BM25Okapi
 
-    query_embedding = embed_texts([query], input_type="query")[0]
+    query_embedding = embed_texts([query])[0]
     semantic = vector_store.query(query_embedding, top_k=top_k, db_path=db_path)
 
     if not semantic:
@@ -52,7 +62,7 @@ def retrieve(
     if rerank and len(candidates) > 1:
         try:
             texts = [c["text"] for c in candidates]
-            result = _get_client().rerank(
+            result = _get_voyage_client().rerank(
                 query, texts, model=VOYAGE_RERANK_MODEL, top_k=TOP_K_RERANK
             )
             candidates = [candidates[r.index] for r in result.results]

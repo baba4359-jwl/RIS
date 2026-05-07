@@ -23,8 +23,8 @@ if errorlevel 1 (
     pip install pyinstaller -q
 )
 
-REM Remove old exe to avoid false success detection
-if exist "dist\RIS\RIS.exe" del "dist\RIS\RIS.exe"
+REM Remove entire dist\RIS to force clean bundle (stale packages cause runtime errors)
+if exist "dist\RIS" rd /s /q "dist\RIS"
 
 REM Build
 echo Building... (first run may take 5-10 minutes^)

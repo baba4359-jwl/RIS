@@ -1,18 +1,29 @@
-import os
+from __future__ import annotations
 
-import voyageai
+from typing import Callable, Optional
 
-VOYAGE_MODEL = "voyage-3-lite"
-_client: voyageai.Client | None = None
+MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
+ProgressCallback = Optional[Callable[..., None]]
 
-def _get_client() -> voyageai.Client:
-    global _client
-    if _client is None:
-        _client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
-    return _client
+_model = None
 
 
-def embed_texts(texts: list[str], input_type: str = "document") -> list[list[float]]:
-    result = _get_client().embed(texts, model=VOYAGE_MODEL, input_type=input_type)
-    return result.embeddings
+def _get_model():
+    global _model
+    if _model is None:
+        from sentence_transformers import SentenceTransformer
+        _model = SentenceTransformer(MODEL_NAME)
+    return _model
+
+
+def embed_texts(
+    texts: list[str],
+    input_type: str = "document",
+    *,
+    progress_cb: ProgressCallback = None,
+) -> list[list[float]]:
+    if not texts:
+        return []
+    embeddings = _get_model().encode(texts, convert_to_numpy=True, show_progress_bar=False)
+    return [e.tolist() for e in embeddings]
