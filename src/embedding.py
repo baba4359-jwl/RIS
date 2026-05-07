@@ -1,17 +1,18 @@
-from sentence_transformers import SentenceTransformer
+import os
 
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-_model: SentenceTransformer | None = None
+import voyageai
 
-
-def get_model() -> SentenceTransformer:
-    global _model
-    if _model is None:
-        _model = SentenceTransformer(MODEL_NAME)
-    return _model
+VOYAGE_MODEL = "voyage-3-lite"
+_client: voyageai.Client | None = None
 
 
-def embed_texts(texts: list[str]) -> list[list[float]]:
-    model = get_model()
-    embeddings = model.encode(texts, convert_to_numpy=True, show_progress_bar=False)
-    return embeddings.tolist()
+def _get_client() -> voyageai.Client:
+    global _client
+    if _client is None:
+        _client = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
+    return _client
+
+
+def embed_texts(texts: list[str], input_type: str = "document") -> list[list[float]]:
+    result = _get_client().embed(texts, model=VOYAGE_MODEL, input_type=input_type)
+    return result.embeddings

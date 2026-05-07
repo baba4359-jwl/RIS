@@ -1,22 +1,12 @@
 import os
 
-from rank_bm25 import BM25Okapi
-
-from src.embedding import embed_texts
+from src.embedding import embed_texts, _get_client
 from src import vector_store
 
 TOP_K_RETRIEVAL = int(os.getenv("TOP_K_RETRIEVAL", "10"))
 TOP_K_RERANK = int(os.getenv("TOP_K_RERANK", "5"))
 
-_reranker = None
-
-
-def _get_reranker():
-    global _reranker
-    if _reranker is None:
-        from sentence_transformers import CrossEncoder
-        _reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-    return _reranker
+VOYAGE_RERANK_MODEL = "rerank-2-lite"
 
 
 def _rrf(lists: list[list[dict]], k: int = 60) -> list[dict]:
@@ -38,7 +28,9 @@ def retrieve(
     rerank: bool = True,
     db_path: str = "db/chroma",
 ) -> list[dict]:
-    query_embedding = embed_texts([query])[0]
+    from rank_bm25 import BM25Okapi
+
+    query_embedding = embed_texts([query], input_type="query")[0]
     semantic = vector_store.query(query_embedding, top_k=top_k, db_path=db_path)
 
     if not semantic:
@@ -59,11 +51,11 @@ def retrieve(
 
     if rerank and len(candidates) > 1:
         try:
-            ranker = _get_reranker()
-            pairs = [(query, c["text"]) for c in candidates]
-            rerank_scores = ranker.predict(pairs)
-            sorted_pairs = sorted(zip(rerank_scores, candidates), key=lambda x: x[0], reverse=True)
-            candidates = [c for _, c in sorted_pairs[:TOP_K_RERANK]]
+            texts = [c["text"] for c in candidates]
+            result = _get_client().rerank(
+                query, texts, model=VOYAGE_RERANK_MODEL, top_k=TOP_K_RERANK
+            )
+            candidates = [candidates[r.index] for r in result.results]
         except Exception:
             candidates = candidates[:TOP_K_RERANK]
 

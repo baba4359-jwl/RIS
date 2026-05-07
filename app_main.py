@@ -21,23 +21,6 @@ load_dotenv()
 DB_PATH = str(Path("db/chroma").resolve())
 
 
-# ── Cached resource loaders ───────────────────────────────────────────────────
-
-@st.cache_resource(show_spinner="Loading embedding model (first run may take ~30s)…")
-def _load_embedding_model():
-    embed_texts(["warmup"])
-    return True
-
-
-@st.cache_resource(show_spinner="Loading re-ranking model…")
-def _load_reranker():
-    try:
-        from sentence_transformers import CrossEncoder
-        return CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
-    except Exception:
-        return None
-
-
 # ── PDF indexing pipeline ─────────────────────────────────────────────────────
 
 def _index_uploaded_files(files) -> tuple[int, int]:
@@ -72,9 +55,6 @@ def main():
         page_icon="📄",
         layout="wide",
     )
-
-    # Pre-warm embedding model
-    _load_embedding_model()
 
     st.title("📄 PDF Research Intelligence")
     st.caption(
@@ -205,8 +185,6 @@ def main():
 
     # Retrieval
     with st.spinner("Searching literature…"):
-        if use_reranker:
-            _load_reranker()  # ensure reranker is loaded
         chunks = retrieve(
             query=question,
             top_k=int(os.getenv("TOP_K_RETRIEVAL", "10")),
@@ -264,7 +242,7 @@ def _render_empty_state():
 | Embeddings | `all-MiniLM-L6-v2` (local, CPU) |
 | Vector store | ChromaDB (persistent, cosine similarity) |
 | Hybrid search | BM25 + semantic via Reciprocal Rank Fusion |
-| Re-ranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
+| Re-ranking | Voyage AI `rerank-2-lite` (cloud API) |
 | Generation | Groq cloud API (citation-grounded, free tier) |
         """)
 

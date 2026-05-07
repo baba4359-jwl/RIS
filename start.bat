@@ -51,11 +51,13 @@ if not exist ".env" (
     echo [3/3] 초기 설정...
     copy .env.example .env >nul
     echo.
-    echo  Groq API 키가 필요합니다.
-    echo  console.groq.com 에서 무료로 발급받을 수 있습니다.
+    echo  두 가지 API 키가 필요합니다 (모두 무료):
+    echo   - Groq:    console.groq.com
+    echo   - Voyage:  dash.voyageai.com
     echo.
     set /p GROQ_KEY=" Groq API Key 입력: "
-    powershell -Command "(Get-Content .env) -replace 'GROQ_API_KEY=gsk_\.\.\.', ('GROQ_API_KEY=' + [System.Environment]::GetEnvironmentVariable('GROQ_KEY')) | Set-Content .env"
+    set /p VOYAGE_KEY=" Voyage API Key 입력: "
+    powershell -Command "$c = Get-Content .env; $c = $c -replace 'GROQ_API_KEY=gsk_\.\.\.', ('GROQ_API_KEY=' + $env:GROQ_KEY); $c = $c -replace 'VOYAGE_API_KEY=pa-\.\.\.', ('VOYAGE_API_KEY=' + $env:VOYAGE_KEY); $c | Set-Content .env"
     echo.
     echo  설정 완료!
 ) else (

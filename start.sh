@@ -35,18 +35,22 @@ if [ ! -f ".env" ]; then
     echo "[3/3] 초기 설정..."
     cp .env.example .env
     echo ""
-    echo " Groq API 키가 필요합니다."
-    echo " console.groq.com 에서 무료로 발급받을 수 있습니다."
+    echo " 두 가지 API 키가 필요합니다 (모두 무료):"
+    echo "  - Groq:   console.groq.com"
+    echo "  - Voyage: dash.voyageai.com"
     echo ""
     read -rp " Groq API Key 입력: " GROQ_KEY
+    read -rp " Voyage API Key 입력: " VOYAGE_KEY
     python3 -c "
 import sys
-key = sys.argv[1]
+groq_key, voyage_key = sys.argv[1], sys.argv[2]
 with open('.env') as f:
     content = f.read()
+content = content.replace('GROQ_API_KEY=gsk_...', f'GROQ_API_KEY={groq_key}')
+content = content.replace('VOYAGE_API_KEY=pa-...', f'VOYAGE_API_KEY={voyage_key}')
 with open('.env', 'w') as f:
-    f.write(content.replace('GROQ_API_KEY=gsk_...', f'GROQ_API_KEY={key}'))
-" "$GROQ_KEY"
+    f.write(content)
+" "$GROQ_KEY" "$VOYAGE_KEY"
     echo ""
     echo " 설정 완료!"
 else
