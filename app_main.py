@@ -10,7 +10,16 @@ from src.chunking import chunk_documents
 from src.embedding import embed_texts
 from src import vector_store
 from src.retrieval import retrieve
-from src.generation import stream_answer
+from src.generation import (
+    DEFAULT_HOST as OLLAMA_DEFAULT_HOST,
+    DEFAULT_MODEL as OLLAMA_DEFAULT_MODEL,
+    is_reachable as ollama_is_reachable,
+    list_models as ollama_list_models,
+    stream_answer,
+    stream_answer_groq,
+    GROQ_DEFAULT_MODEL,
+    GROQ_FREE_MODELS,
+)
 
 load_dotenv()
 
@@ -88,12 +97,73 @@ def main():
     with st.sidebar:
         st.header("⚙️ Settings")
 
-        api_key_input = st.text_input(
-            "Google Gemini API Key",
-            value=os.getenv("GEMINI_API_KEY", ""),
-            type="password",
-            placeholder="AIza…",
+        st.subheader("⚙️ LLM Provider")
+        provider = st.radio(
+            "Provider",
+            options=["Ollama (Local)", "Groq (Cloud)"],
+            index=1 if os.getenv("GROQ_API_KEY") else 0,
+            label_visibility="collapsed",
         )
+
+        if provider == "Groq (Cloud)":
+            groq_api_key = st.text_input(
+                "Groq API Key",
+                value=os.getenv("GROQ_API_KEY", ""),
+                type="password",
+                help="Free tier at console.groq.com — no GPU needed, very fast.",
+            )
+            env_groq_model = os.getenv("GROQ_MODEL", GROQ_DEFAULT_MODEL)
+            default_groq_idx = (
+                GROQ_FREE_MODELS.index(env_groq_model)
+                if env_groq_model in GROQ_FREE_MODELS
+                else 0
+            )
+            groq_model = st.selectbox(
+                "Model",
+                options=GROQ_FREE_MODELS,
+                index=default_groq_idx,
+                help="llama-3.1-8b-instant is fastest; llama-3.3-70b-versatile is highest quality.",
+            )
+            st.caption("⚡ Cloud inference — responses in 1–3 seconds")
+            ollama_host = OLLAMA_DEFAULT_HOST
+            ollama_model = OLLAMA_DEFAULT_MODEL
+        else:
+            groq_api_key = ""
+            groq_model = ""
+            st.subheader("🦙 Local LLM (Ollama)")
+            ollama_host = st.text_input(
+                "Ollama host",
+                value=os.getenv("OLLAMA_HOST", OLLAMA_DEFAULT_HOST),
+                help="URL of the local Ollama daemon. Default: http://localhost:11434",
+            )
+
+            available_models = ollama_list_models(ollama_host)
+            env_model = os.getenv("OLLAMA_MODEL", OLLAMA_DEFAULT_MODEL)
+
+            if available_models:
+                default_idx = (
+                    available_models.index(env_model)
+                    if env_model in available_models
+                    else 0
+                )
+                ollama_model = st.selectbox(
+                    "Model",
+                    options=available_models,
+                    index=default_idx,
+                    help="Locally installed Ollama models. Pull more with `ollama pull <name>`.",
+                )
+                st.caption("✅ Connected to Ollama")
+            else:
+                ollama_model = st.text_input(
+                    "Model",
+                    value=env_model,
+                    help="Could not list models. Type the name of a model you've already pulled.",
+                )
+                st.caption(
+                    "⚠️ Ollama not reachable. Install from "
+                    "[ollama.com](https://ollama.com) and pull a model, e.g. "
+                    "`ollama pull qwen2.5:3b`."
+                )
 
         st.divider()
 
@@ -175,10 +245,24 @@ def main():
     if not question:
         return
 
-    api_key = api_key_input or os.getenv("GEMINI_API_KEY", "")
-    if not api_key:
-        st.error("Provide a Google Gemini API key in the sidebar or set GEMINI_API_KEY in .env.")
-        return
+    if provider == "Groq (Cloud)":
+        if not groq_api_key:
+            st.error(
+                "Groq API 키를 사이드바에 입력하세요. "
+                "[console.groq.com](https://console.groq.com)에서 무료로 발급받을 수 있습니다."
+            )
+            return
+    else:
+        if not ollama_is_reachable(ollama_host):
+            st.error(
+                f"Cannot reach Ollama at `{ollama_host}`. "
+                "Install from [ollama.com](https://ollama.com), then make sure the "
+                "Ollama app is running (or run `ollama serve`)."
+            )
+            return
+        if not ollama_model:
+            st.error("Select an Ollama model in the sidebar.")
+            return
 
     with st.chat_message("user"):
         st.markdown(question)
@@ -202,10 +286,19 @@ def main():
         else:
             placeholder = st.empty()
             answer = ""
-            for delta in stream_answer(api_key, st.session_state.history, question, chunks):
-                answer += delta
-                placeholder.markdown(answer + "▌")
-            placeholder.markdown(answer)
+            try:
+                _stream = (
+                    stream_answer_groq(groq_api_key, groq_model, [], question, chunks)
+                    if provider == "Groq (Cloud)"
+                    else stream_answer(ollama_host, ollama_model, [], question, chunks)
+                )
+                for delta in _stream:
+                    answer += delta
+                    placeholder.markdown(answer + "▌")
+                placeholder.markdown(answer)
+            except RuntimeError as e:
+                answer = f"⚠️ {e}"
+                placeholder.error(answer)
 
             # Collapsible source panel
             source_labels = sorted({f"{c['source_file']} (p.{c['page_number']})" for c in chunks})
@@ -241,7 +334,7 @@ def _render_empty_state():
 | Vector store | ChromaDB (persistent, cosine similarity) |
 | Hybrid search | BM25 + semantic via Reciprocal Rank Fusion |
 | Re-ranking | `cross-encoder/ms-marco-MiniLM-L-6-v2` |
-| Generation | Claude Sonnet 4.6 (citation-grounded) |
+| Generation | Local LLM via Ollama (citation-grounded, no external API) |
         """)
 
 
