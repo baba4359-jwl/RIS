@@ -87,6 +87,18 @@ if not exist ".venv\" (
 
 call .venv\Scripts\activate.bat
 
+REM Re-check 64-bit after activation (venv may have been created with old 32-bit Python)
+python -c "import struct; exit(0 if struct.calcsize('P')*8==64 else 1)" >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo  [ERROR] The .venv folder was created with 32-bit Python.
+    echo  Please delete the .venv folder and re-run this file.
+    echo  Make sure Python 3.12 64-bit is installed: python-3.12.9-amd64.exe
+    echo.
+    pause
+    exit /b 1
+)
+
 REM Upgrade pip inside venv before installing packages
 python -m pip install --upgrade pip -q
 
