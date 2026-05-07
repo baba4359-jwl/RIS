@@ -17,18 +17,23 @@ chromadb_dir  = _pkg_dir("chromadb")
 
 block_cipher = None
 
-# copy_metadata includes .dist-info so importlib.metadata.version() works at runtime
+def _safe_metadata(name):
+    """copy_metadata wrapper — silently skips packages without dist-info."""
+    try:
+        return copy_metadata(name)
+    except Exception:
+        return []
+
+# Include .dist-info so importlib.metadata.version() works at runtime
 _metadata = (
-    copy_metadata("streamlit") +
-    copy_metadata("chromadb") +
-    copy_metadata("groq") +
-    copy_metadata("voyageai") +
-    copy_metadata("pdfplumber") +
-    copy_metadata("pymupdf") +
-    copy_metadata("rank_bm25") +
-    copy_metadata("nltk") +
-    copy_metadata("click") +
-    copy_metadata("tornado")
+    _safe_metadata("streamlit") +
+    _safe_metadata("chromadb") +
+    _safe_metadata("groq") +
+    _safe_metadata("voyageai") +
+    _safe_metadata("pdfplumber") +
+    _safe_metadata("PyMuPDF") +
+    _safe_metadata("rank_bm25") +
+    _safe_metadata("nltk")
 )
 
 a = Analysis(
