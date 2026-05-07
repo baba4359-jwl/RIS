@@ -25,20 +25,21 @@ PDF 문헌을 업로드하면 인용과 함께 답변하는 RAG 시스템.
 
 ## Setup (로컬 실행)
 
+**Python 3.10 이상**이 설치되어 있어야 합니다.
+
 ```bash
 git clone https://github.com/baba4359-jwl/RIS
 cd RIS
-python -m venv .venv
-.venv\Scripts\activate      # Windows
-# source .venv/bin/activate   # macOS/Linux
-
-pip install -r requirements.txt
-
-cp .env.example .env
-# .env 에 GROQ_API_KEY 입력 (https://console.groq.com 에서 무료 발급)
-
-streamlit run app_main.py
 ```
+
+이후 OS에 맞는 스크립트를 실행하세요. 가상환경 생성·패키지 설치·API 키 설정을 자동으로 처리합니다.
+
+| OS | 실행 방법 |
+|---|---|
+| Windows | `start.bat` 더블클릭 |
+| macOS / Linux | 터미널에서 `bash start.sh` |
+
+> macOS에서 더블클릭으로 실행하려면: `chmod +x start.sh` 후 `start.command`로 이름 변경
 
 ## Environment Variables
 
