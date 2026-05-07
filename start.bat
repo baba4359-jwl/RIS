@@ -8,17 +8,17 @@ echo   PDF Research Intelligence - Setup and Launch
 echo  ================================================
 echo.
 
-REM ── Python check ─────────────────────────────────────
+REM Python check
 python --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python not found.
-    echo         Download and install from: https://www.python.org/downloads
-    echo         Make sure to check "Add Python to PATH" during installation.
+    echo         Download from: https://www.python.org/downloads
+    echo         Check "Add Python to PATH" during installation.
     pause
     exit /b 1
 )
 
-REM ── Create virtual environment (first run only) ──────
+REM Create virtual environment (first run only)
 if not exist ".venv\" (
     echo [1/3] Creating virtual environment...
     python -m venv .venv
@@ -31,10 +31,10 @@ if not exist ".venv\" (
 
 call .venv\Scripts\activate.bat
 
-REM ── Install packages (first run only) ────────────────
+REM Install packages (first run only)
 python -c "import streamlit" >nul 2>&1
 if errorlevel 1 (
-    echo [2/3] Installing packages (first run only, takes 2-3 min)...
+    echo [2/3] Installing packages (first run only, takes 2-3 min^)...
     pip install -r requirements.txt -q
     if errorlevel 1 (
         echo [ERROR] Package installation failed.
@@ -45,7 +45,7 @@ if errorlevel 1 (
     echo [2/3] Packages already installed.
 )
 
-REM ── Create .env (first run only) ─────────────────────
+REM Create .env (first run only)
 if not exist ".env" (
     echo [3/3] Initial setup...
     copy .env.example .env >nul
@@ -63,7 +63,7 @@ if not exist ".env" (
     echo [3/3] Configuration found.
 )
 
-REM ── Launch app ────────────────────────────────────────
+REM Launch app
 echo.
 echo  Starting app... Browser will open automatically.
 echo  Close this window to stop the app.

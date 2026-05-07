@@ -8,41 +8,41 @@ echo   RIS - Windows Application Build
 echo  ================================================
 echo.
 
-REM ── Check virtual environment ─────────────────────────
+REM Check virtual environment
 if not exist ".venv\Scripts\activate.bat" (
-    echo [ERROR] .venv not found. Run start.bat first to set up the environment.
+    echo [ERROR] .venv not found. Run start.bat first.
     pause
     exit /b 1
 )
 call .venv\Scripts\activate.bat
 
-REM ── Install PyInstaller ───────────────────────────────
+REM Install PyInstaller
 python -c "import PyInstaller" >nul 2>&1
 if errorlevel 1 (
     echo Installing PyInstaller...
     pip install pyinstaller -q
 )
 
-REM ── Build ─────────────────────────────────────────────
-echo Building... (first run may take 5-10 minutes)
+REM Build
+echo Building... (first run may take 5-10 minutes^)
 echo.
 pyinstaller RIS.spec --noconfirm
 
 if not exist "dist\RIS\RIS.exe" (
     echo.
-    echo [ERROR] Build failed. Check the error messages above.
+    echo [ERROR] Build failed. Check error messages above.
     pause
     exit /b 1
 )
 
-REM ── Copy .env ─────────────────────────────────────────
+REM Copy .env
 echo.
 echo Preparing distribution files...
 if exist ".env" (
     copy .env "dist\RIS\.env" >nul
     echo  .env copied.
 ) else (
-    echo  [WARNING] .env not found. Add dist\RIS\.env manually before distributing.
+    echo  [WARNING] .env not found. Add dist\RIS\.env manually.
 )
 
 if not exist "dist\RIS\db\" mkdir "dist\RIS\db"
@@ -50,8 +50,7 @@ if not exist "dist\RIS\db\" mkdir "dist\RIS\db"
 echo.
 echo  Build complete!
 echo.
-echo  How to distribute:
-echo   Zip the entire dist\RIS\ folder and send to users.
-echo   Users double-click RIS.exe to launch.
+echo  Distribute: zip the dist\RIS\ folder and send to users.
+echo  Users double-click RIS.exe to launch.
 echo.
 pause
