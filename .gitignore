@@ -45,3 +45,6 @@ Thumbs.db
 .streamlit/secrets.toml
 # Jupyter
 .ipynb_checkpoints/
+# PyInstaller build output
+build/
+dist/
