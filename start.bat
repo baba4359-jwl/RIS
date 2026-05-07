@@ -9,33 +9,10 @@ echo   PDF Research Intelligence - Setup and Launch
 echo  ================================================
 echo.
 
-REM ?? Step 1: Find Python 3.10+ ????????????????????????????????????????????????
+REM ?? Step 1: Find Python 3.10-3.12 ???????????????????????????????????????????????
 set "PYTHON_CMD="
 set "PYTHON_VER="
-
-REM Try 'python'
-set "_TMP="
-for /f "tokens=2" %%v in ('python --version 2^>^&1') do set "_TMP=%%v"
-if defined _TMP (
-    call :check_ver "!_TMP!"
-    if not errorlevel 1 (
-        set "PYTHON_CMD=python"
-        set "PYTHON_VER=!_TMP!"
-    )
-)
-
-REM Try 'py -3' (Windows Python Launcher)
-if not defined PYTHON_CMD (
-    set "_TMP="
-    for /f "tokens=2" %%v in ('py -3 --version 2^>^&1') do set "_TMP=%%v"
-    if defined _TMP (
-        call :check_ver "!_TMP!"
-        if not errorlevel 1 (
-            set "PYTHON_CMD=py -3"
-            set "PYTHON_VER=!_TMP!"
-        )
-    )
-)
+call :detect_python
 
 REM Auto-install if not found or too old
 if defined PYTHON_CMD goto :python_ok
@@ -49,15 +26,8 @@ if not errorlevel 1 (
     echo       Installing via winget...
     winget install Python.Python.3.12 --silent --scope user --accept-source-agreements --accept-package-agreements
     call :refresh_path
-    set "_TMP="
-    for /f "tokens=2" %%v in ('python --version 2^>^&1') do set "_TMP=%%v"
-    if defined _TMP (
-        call :check_ver "!_TMP!"
-        if not errorlevel 1 (
-            set "PYTHON_CMD=python"
-            set "PYTHON_VER=!_TMP!"
-        )
-    )
+    call :detect_python
+    if defined PYTHON_CMD echo       Python !PYTHON_VER! verified after winget install.
 )
 
 REM Method 2: Direct download
@@ -70,15 +40,8 @@ echo       Running installer (user-level, no admin required)...
 "!PYINST!" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0
 del "!PYINST!" >nul 2>&1
 call :refresh_path
-set "_TMP="
-for /f "tokens=2" %%v in ('python --version 2^>^&1') do set "_TMP=%%v"
-if defined _TMP (
-    call :check_ver "!_TMP!"
-    if not errorlevel 1 (
-        set "PYTHON_CMD=python"
-        set "PYTHON_VER=!_TMP!"
-    )
-)
+call :detect_python
+if defined PYTHON_CMD echo       Python !PYTHON_VER! verified after direct install.
 if defined PYTHON_CMD goto :python_ok
 
 :no_python
@@ -179,3 +142,27 @@ for /f "skip=2 tokens=2,*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Con
 if defined _UPATH set "PATH=!PATH!;!_UPATH!"
 if defined _SPATH set "PATH=!PATH!;!_SPATH!"
 exit /b 0
+
+:detect_python
+REM Try 'python' then 'py -3' and set PYTHON_CMD / PYTHON_VER if version is valid.
+set "_TMP="
+for /f "tokens=2" %%v in ('python --version 2^>^&1') do set "_TMP=%%v"
+if defined _TMP (
+    call :check_ver "!_TMP!"
+    if not errorlevel 1 (
+        set "PYTHON_CMD=python"
+        set "PYTHON_VER=!_TMP!"
+        exit /b 0
+    )
+)
+set "_TMP="
+for /f "tokens=2" %%v in ('py -3 --version 2^>^&1') do set "_TMP=%%v"
+if defined _TMP (
+    call :check_ver "!_TMP!"
+    if not errorlevel 1 (
+        set "PYTHON_CMD=py -3"
+        set "PYTHON_VER=!_TMP!"
+        exit /b 0
+    )
+)
+exit /b 1
