@@ -25,7 +25,7 @@ This is a **Mini RAG (Retrieval-Augmented Generation) system** built for queryin
 ## Repository Structure
 
 ```
-amr-rag-system/
+RIS/
 ├── CLAUDE.md                  # ← This file
 ├── README.md
 ├── requirements.txt
@@ -37,25 +37,14 @@ amr-rag-system/
 ├── db/
 │   └── chroma/                # Persistent ChromaDB vector store (auto-created)
 │
-├── src/
-│   ├── __init__.py
-│   ├── ingestion.py           # PDF parsing and text extraction
-│   ├── chunking.py            # Chunking strategy and text splitting
-│   ├── embedding.py           # Embedding model wrapper
-│   ├── vector_store.py        # ChromaDB interface (upsert, query, delete)
-│   ├── retrieval.py           # Similarity search + BM25 hybrid + re-ranker
-│   └── generation.py          # LLM call, prompt construction, citation injection
-│
-├── notebooks/
-│   └── demo.ipynb             # End-to-end demo with evaluation table
-│
-├── evaluation/
-│   └── eval_pairs.json        # 5 complex Q&A pairs for qualitative evaluation
-│
-└── tests/
-    ├── test_ingestion.py
-    ├── test_retrieval.py
-    └── test_generation.py
+└── src/
+    ├── __init__.py
+    ├── ingestion.py           # PDF parsing and text extraction
+    ├── chunking.py            # Chunking strategy and text splitting
+    ├── embedding.py           # Embedding model wrapper
+    ├── vector_store.py        # ChromaDB interface (upsert, query, delete)
+    ├── retrieval.py           # Similarity search + BM25 hybrid + re-ranker
+    └── generation.py          # LLM call, prompt construction, citation injection
 ```
 
 ---
@@ -111,7 +100,7 @@ amr-rag-system/
 **Choice:** Sentence-aware fixed-size chunking (512 tokens, 64-token overlap)
 
 **Rationale:**
-- AMR guidelines use structured paragraphs with one key recommendation per section. 512 tokens typically captures one full recommendation plus its supporting evidence.
+- Guidelines use structured paragraphs with one key recommendation per section. 512 tokens typically captures one full recommendation plus its supporting evidence.
 - Sentence-awareness prevents splitting mid-sentence, which degrades embedding quality.
 - 64-token overlap (≈ 12.5%) is enough to bridge context across chunk boundaries without doubling storage.
 - Alternatives considered: Recursive character splitting (less semantic awareness), semantic chunking (too slow for 20 PDFs without GPU).
