@@ -250,23 +250,11 @@ pytest tests/ -v
 - Do not hardcode API keys anywhere; always read from `.env` via `python-dotenv`.
 - When adding new PDF sources, update `evaluation/eval_pairs.json` with at least one new Q&A pair to maintain evaluation coverage.
 
-## Evaluation Table
-- Create at leatst 5 complex question-answer pairs.
-- Evaluate the system's response qualitatively using the following format
-| Question | Expected Answer | System Response | Result(Hit/Miss) | Comment
-|---|---|---|---|---|
-| (e.g., Trend in X resistance) | (Based on PDF) | (Generated Output) | Hit | Good use of citation |
-
-## Bonus Points for evaluation (Advanced)
-- Implementation of a Re-ranker (e.g., Cohere or Cross-Encoder)
-- Hybrid Search (combining Semantic Search with BM25)
-- Citations: The system returns the specific page number or source filename for its claims
-
 ## Deliverables
 
-| 항목 | 내용 | 위치 |
+| Item | Description | Location |
 |---|---|---|
-| **Codebase** | 수집(ingestion), 검색(retrieval), 생성(generation) 로직이 분리된 모듈 구조 | `src/` 디렉터리 |
-| **README** | Windows 환경 설치 가이드, 환경 변수 설명, 시스템 구조 요약 | `README.md` |
-| **Design Justification** | 청킹 크기(512 tokens, 64 overlap)와 임베딩 모델(`all-MiniLM-L6-v2`) 선택 근거 | 이 문서의 **Key Design Decisions** 섹션 |
-| **Error Analysis** | 할루시네이션이 발생한 실패 사례 1건과 원인 분석 | 이 문서의 **Error Analysis** 섹션 |
+| **Codebase** | Modular pipeline with ingestion, retrieval, and generation logic cleanly separated into independent modules. | `src/` directory — https://github.com/baba4359-jwl/RIS |
+| **README** | Windows installation guide, environment variable reference, and system architecture summary. | `README.md` |
+| **Design Justification** | Rationale for chunking parameters (512 tokens, 64-token overlap) and embedding model selection (`all-MiniLM-L6-v2`). | **Key Design Decisions** section in this document |
+| **Error Analysis** | One documented hallucination case with root cause analysis and mitigations applied. | **Error Analysis** section in this document |
