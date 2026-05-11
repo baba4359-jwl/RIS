@@ -32,6 +32,8 @@ PDF 문헌을 업로드하면 인용과 함께 답변하는 RAG 시스템.
 
 ### 2단계 — Python 3.11 설치
 
+`start.bat`이 Python을 자동으로 설치하려 시도하지만, **자동 설치가 실패하는 환경이 있으므로 미리 수동 설치를 권장합니다.**
+
 아래 링크에서 Python **3.11 64-bit** 설치 파일을 내려받아 실행합니다.
 
 > **https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe**
@@ -42,28 +44,30 @@ PDF 문헌을 업로드하면 인용과 함께 답변하는 RAG 시스템.
 
 > ⚠️ Python 3.12 이상은 지원하지 않습니다. 반드시 **3.11** 을 설치해 주세요.
 
-### 3단계 — 패키지 설치
+### 3단계 — start.bat 실행
 
-압축 해제된 폴더 안에서 아래 명령어를 순서대로 실행합니다 **(최초 1회, 약 5~10분 소요)**.
+압축 해제 폴더에서 **`start.bat`을 더블클릭**합니다.
 
-cmd(명령 프롬프트)를 열고 압축 해제 폴더로 이동합니다.
+`start.bat`이 아래 작업을 자동으로 수행합니다.
 
-```cmd
-cd C:\RIS-main
-python -m venv .venv
-.venv\Scripts\activate
-python -m pip install --upgrade pip
-pip install --prefer-binary -r requirements.txt
-```
+| 단계 | 내용 |
+|---|---|
+| [1/4] Python 확인 | Python 3.11 64-bit 감지 및 버전 검증 |
+| [2/4] 가상환경 생성 | `.venv` 폴더 생성 (최초 1회) |
+| [3/4] 패키지 설치 | `requirements.txt` 기반 설치 **(최초 실행 시 5~10분 소요)** |
+| [4/4] 설정 완료 | `.env` 파일 자동 구성 |
 
-> 설치 중 오류가 발생하면 Python 버전이 3.11.x인지, PATH가 올바르게 설정됐는지 확인합니다.
-
-### 4단계 — 앱 실행
-
-탐색기에서 압축 해제 폴더를 열고 **`start.bat`을 더블클릭**합니다.  
-브라우저가 자동으로 열리고 앱이 실행됩니다.
+설치가 완료되면 브라우저가 자동으로 열리고 앱이 실행됩니다.
 
 > **두 번째 실행부터는** `start.bat` 더블클릭만 하면 바로 시작됩니다.
+
+#### 오류가 발생한 경우
+
+| 오류 메시지 | 해결 방법 |
+|---|---|
+| `Could not install Python automatically` | 2단계를 참고해 Python 3.11을 수동 설치 후 재실행 |
+| `32-bit Python detected` | `python-3.11.9-amd64.exe` 로 재설치 (32-bit 버전 제거 후) |
+| `Package installation failed` | `.venv` 폴더 삭제 후 재실행 |
 
 ---
 
