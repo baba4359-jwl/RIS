@@ -16,72 +16,51 @@ PDF 문헌을 업로드하면 인용과 함께 답변하는 RAG 시스템.
 
 ---
 
-## Windows 설치 가이드 (아무것도 설치되지 않은 환경)
+## Windows 설치 가이드
 
-### 1단계 — Git 설치
+### 1단계 — 프로젝트 다운로드
 
-Git이 없으면 아래 링크에서 설치합니다.
+아래 링크에서 ZIP 파일로 다운로드합니다.
 
-> https://git-scm.com/download/win
->
-> 설치 시 옵션은 모두 기본값으로 진행해도 됩니다.
+> **https://github.com/baba4359-jwl/RIS** 접속 →
+> 초록색 **`<> Code`** 버튼 클릭 → **`Download ZIP`** 선택
 
-설치 후 바탕화면 또는 원하는 폴더에서 **우클릭 → "Open Git Bash here"** 를 선택합니다.
+다운로드된 **`RIS-main.zip`** 을 원하는 위치에 압축 해제합니다.  
+(예: `C:\RIS-main`)
 
-### 2단계 — Python 3.12 설치
+> 압축 해제 후 폴더 안에 `start.bat`, `app_main.py` 등의 파일이 보이면 정상입니다.
+
+### 2단계 — Python 3.11 설치
 
 아래 링크에서 Python **3.11 64-bit** 설치 파일을 내려받아 실행합니다.
 
-> https://www.python.org/downloads/release/python-3119/
+> **https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe**
 >
 > 파일명: **`python-3.11.9-amd64.exe`** (`amd64` = 64-bit, 이 파일을 받아야 합니다)
->
-> 설치 화면 하단의 **"Add Python to PATH"** 에 반드시 체크한 뒤 설치합니다.
 
-설치 후 cmd(명령 프롬프트)에서 버전을 확인합니다.
+설치 화면 하단의 **"Add Python to PATH"** 에 반드시 체크한 뒤 **Install Now** 를 클릭합니다.
 
-```cmd
-python --version
-```
+> ⚠️ Python 3.12 이상은 지원하지 않습니다. 반드시 **3.11** 을 설치해 주세요.
 
-`Python 3.12.x` 가 출력되면 정상입니다.
+### 3단계 — 패키지 설치
 
-### 3단계 — 프로젝트 다운로드
+압축 해제된 폴더 안에서 아래 명령어를 순서대로 실행합니다 **(최초 1회, 약 5~10분 소요)**.
 
-cmd 또는 Git Bash 에서 아래 명령어를 실행합니다.
-
-```bash
-git clone https://github.com/baba4359-jwl/RIS
-cd RIS
-```
-
-### 4단계 — 패키지 설치
-
-프로젝트 폴더 안에서 아래 명령어를 순서대로 실행합니다 **(최초 1회, 약 5~10분 소요)**.
+cmd(명령 프롬프트)를 열고 압축 해제 폴더로 이동합니다.
 
 ```cmd
+cd C:\RIS-main
 python -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
 pip install --prefer-binary -r requirements.txt
 ```
 
-> 설치 중 오류가 발생하면 Python 버전이 3.12.x인지, PATH가 올바르게 설정됐는지 확인합니다.
+> 설치 중 오류가 발생하면 Python 버전이 3.11.x인지, PATH가 올바르게 설정됐는지 확인합니다.
 
-### 5단계 — API 키 입력 (최초 1회)
+### 4단계 — 앱 실행
 
-`start.bat`을 처음 실행하면 아래 두 가지 무료 API 키를 입력하라는 메시지가 나옵니다.
-
-| 서비스 | 용도 | 발급 주소 |
-|---|---|---|
-| Groq | 답변 생성 LLM | https://console.groq.com |
-| Voyage AI | 검색 재랭킹 | https://dash.voyageai.com |
-
-두 서비스 모두 회원가입 후 무료로 발급 가능합니다.
-
-### 6단계 — 앱 실행
-
-탐색기에서 `RIS` 폴더를 열고 **`start.bat`을 더블클릭**합니다.  
+탐색기에서 압축 해제 폴더를 열고 **`start.bat`을 더블클릭**합니다.  
 브라우저가 자동으로 열리고 앱이 실행됩니다.
 
 > **두 번째 실행부터는** `start.bat` 더블클릭만 하면 바로 시작됩니다.
