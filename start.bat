@@ -48,9 +48,16 @@ if defined PYTHON_CMD goto :python_ok
 echo.
 echo  [ERROR] Could not install Python automatically.
 echo.
-echo  Please install Python 3.10+ manually:
-echo    https://www.python.org/downloads
-echo  Check "Add Python to PATH" during installation, then re-run this file.
+echo  Please install Python 3.11 64-bit manually:
+echo    https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe
+echo.
+echo  IMPORTANT:
+echo    1. Download python-3.11.9-amd64.exe  (NOT 3.12 or 3.13)
+echo    2. Check "Add Python to PATH" during installation
+echo    3. Re-run this file after installation
+echo.
+echo  Note: Python 3.12+ is not supported -- chroma-hnswlib has no
+echo        Windows wheel for 3.12+, causing installation to fail.
 echo.
 pause
 exit /b 1
@@ -64,9 +71,9 @@ if errorlevel 1 (
     echo.
     echo  [ERROR] 32-bit Python detected. This app requires 64-bit Python.
     echo.
-    echo  Please install Python 3.12 64-bit from:
-    echo    https://www.python.org/downloads/release/python-3129/
-    echo  Download: python-3.12.9-amd64.exe
+    echo  Please install Python 3.11 64-bit from:
+    echo    https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe
+    echo  Download: python-3.11.9-amd64.exe
     echo.
     pause
     exit /b 1
