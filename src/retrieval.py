@@ -19,6 +19,24 @@ def _get_voyage_client():
     return _voyage_client
 
 
+def _expand_query(query: str, db_path: str) -> str:
+    """Expand abbreviations in the query using the persisted abbreviation map.
+
+    If the user queries "TCV efficacy", this appends "typhoid conjugate vaccine"
+    so BM25 also scores chunks that use only the full term.
+    """
+    abbrev_map = vector_store.load_abbrev_map(db_path)
+    if not abbrev_map:
+        return query
+    tokens = query.split()
+    additions: list[str] = []
+    for token in tokens:
+        clean = token.upper().strip(".,;:()[]")
+        if clean in abbrev_map:
+            additions.append(abbrev_map[clean])
+    return query + (" " + " ".join(additions) if additions else "")
+
+
 def _rrf(lists: list[list[dict]], k: int = 60) -> list[dict]:
     """Reciprocal Rank Fusion across multiple ranked result lists."""
     scores: dict[str, float] = {}
@@ -50,7 +68,8 @@ def retrieve(
         all_docs = vector_store.get_all(db_path=db_path)
         if all_docs:
             bm25 = BM25Okapi([d["text"].lower().split() for d in all_docs])
-            scores = bm25.get_scores(query.lower().split())
+            expanded_query = _expand_query(query, db_path)
+            scores = bm25.get_scores(expanded_query.lower().split())
             ranked = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
             bm25_results = [all_docs[i] for i, s in ranked[:top_k] if s > 0]
             candidates = _rrf([semantic, bm25_results])

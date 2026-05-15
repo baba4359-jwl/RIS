@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 
@@ -5,6 +6,8 @@ import chromadb
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
 from src.chunking import Chunk
+
+_ABBREV_FILE = "abbreviations.json"
 
 COLLECTION_NAME = "amr_corpus"
 
@@ -109,6 +112,20 @@ def reset(db_path: str):
         _client(db_path).delete_collection(COLLECTION_NAME)
     except Exception:
         pass
+
+
+def save_abbrev_map(abbrev_map: dict[str, str], db_path: str) -> None:
+    path = Path(db_path) / _ABBREV_FILE
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(abbrev_map, f, ensure_ascii=False, indent=2)
+
+
+def load_abbrev_map(db_path: str) -> dict[str, str]:
+    path = Path(db_path) / _ABBREV_FILE
+    if not path.exists():
+        return {}
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def get_indexed_files(db_path: str) -> dict[str, int]:

@@ -178,17 +178,36 @@ jupyter notebook notebooks/demo.ipynb
 2. **Prompt insufficient guard:** The system prompt said "prefer the provided context" — too weak. It should say "answer *only* from the provided context and state explicitly when data is missing."
 3. **Mitigation applied:** Strengthened the system prompt to require explicit "Not found in provided literature" statements. Added a post-generation step that checks if cited page numbers actually exist in the retrieved chunks; if not, flags the answer as potentially hallucinated.
 
+### Known Failure Case: BM25 Abbreviation Mismatch
+
+**Query asked:** "What is TCV immunogenicity in school-age children?"
+
+**System response (hybrid mode):** Returned semantically plausible chunks from WHO guidelines about TCV, but missed the Lancet 2019 trial paragraph that used only the full term "typhoid conjugate vaccine" (no acronym). BM25 scored that paragraph zero for the token "TCV".
+
+**Root cause analysis:**
+
+1. **Token disjointness:** BM25 is a bag-of-words model. "TCV" and "typhoid conjugate vaccine" are separate tokens with no overlap. A chunk containing only "typhoid conjugate vaccine" receives a BM25 score of 0 for a query containing "TCV", even though they are identical in meaning.
+2. **Definition scattering:** In WHO/Lancet PDFs, an abbreviation is typically defined once (page 1–2) and then used without expansion for the remaining 40+ pages. The chunk holding the definition has high BM25 relevance for both forms; subsequent chunks have zero relevance for the full-form query.
+3. **Mitigation applied:**
+   - `chunking.py`: `extract_abbreviations()` scans all pages of a document for `Full Term (ABBR)` patterns before chunking. Each resulting chunk whose text contains a known abbreviation is augmented with `[ABBR: full term]` so BM25 indexes both forms in that chunk.
+   - `retrieval.py`: `_expand_query()` loads the persisted abbreviation map from `db/chroma/abbreviations.json` and appends full-term expansions to the BM25 query string before scoring.
+   - `vector_store.py`: `save_abbrev_map()` / `load_abbrev_map()` persist the per-corpus abbreviation map alongside the ChromaDB collection.
+
 ---
 
 ## Evaluation Table
 
-| # | Question | Expected Answer (from PDFs) | System Response | Result | Comment |
-|---|---|---|---|---|---|
-| 1 | What are WHO's first-line antibiotic recommendations for uncomplicated typhoid fever in adults? | Azithromycin (orally) or fluoroquinolones where susceptible (WHO Typhoid Guidelines 2018, p.22) | Correctly cited azithromycin and fluoroquinolones with dosing details | ✅ Hit | Strong retrieval; citation page number matched |
-| 2 | What is the reported efficacy of typhoid conjugate vaccine (TCV) in children aged 9 months–15 years? | 81.6% efficacy at 12 months follow-up (Lancet 2019, p.7) | Retrieved correct efficacy figure; missed confidence interval detail | ⚠️ Partial Hit | CI data was chunked into an adjacent chunk; overlap insufficient |
-| 3 | Compare typhoid incidence rates between South Asia and Sub-Saharan Africa per 100,000 population | South Asia: 493 / Sub-Saharan Africa: 125 per 100,000 (GBD Typhoid 2019, p.4) | Returned correct figures with correct source citation | ✅ Hit | BM25 hybrid search helped surface the numeric comparison |
-| 4 | What is the protective efficacy of TCV in infants under 6 months of age? | Not reported in ingested literature | Hallucinated a 72% efficacy figure | ❌ Miss | Known failure case — see Error Analysis above |
-| 5 | What are the clinical criteria distinguishing typhoid fever from paratyphoid fever according to WHO case definitions? | Typhoid: S. Typhi confirmed; Paratyphoid: S. Paratyphi A/B/C; clinical overlap noted (WHO Surveillance Standards, p.9) | Correctly distinguished both case definitions with organism identifiers | ✅ Hit | Re-ranker promoted the case definition chunk over a treatment chunk |
+Questions 6–7 are **cross-document synthesis** cases, designed specifically to test whether the system can combine evidence from ≥ 2 distinct source files in a single answer. The **Cross-Doc Recall** column measures the fraction of gold source files that were cited in the response (1.0 = all required sources cited).
+
+| # | Question | Required Sources (Gold) | Expected Answer | System Response | Result | Cross-Doc Recall | Comment |
+|---|---|---|---|---|---|---|---|
+| 1 | What are WHO's first-line antibiotic recommendations for uncomplicated typhoid fever in adults? | WHO Typhoid Guidelines 2018 | Azithromycin (orally) or fluoroquinolones where susceptible (p.22) | Correctly cited azithromycin and fluoroquinolones with dosing details | ✅ Hit | N/A (single-source) | Strong retrieval; citation page number matched |
+| 2 | What is the reported efficacy of typhoid conjugate vaccine (TCV) in children aged 9 months–15 years? | Lancet 2019 | 81.6% efficacy at 12 months follow-up (p.7) | Retrieved correct efficacy figure; missed confidence interval detail | ⚠️ Partial Hit | N/A (single-source) | CI data was chunked into an adjacent chunk; overlap insufficient |
+| 3 | Compare typhoid incidence rates between South Asia and Sub-Saharan Africa per 100,000 population | GBD Typhoid 2019 | South Asia: 493 / Sub-Saharan Africa: 125 per 100,000 (p.4) | Returned correct figures with correct source citation | ✅ Hit | N/A (single-source) | BM25 hybrid search helped surface the numeric comparison |
+| 4 | What is the protective efficacy of TCV in infants under 6 months of age? | None (not in literature) | "Not found in the provided literature." | Hallucinated a 72% efficacy figure | ❌ Miss | N/A | Known failure case — see Error Analysis above |
+| 5 | What are the clinical criteria distinguishing typhoid fever from paratyphoid fever according to WHO case definitions? | WHO Surveillance Standards | Typhoid: S. Typhi confirmed; Paratyphoid: S. Paratyphi A/B/C (p.9) | Correctly distinguished both case definitions with organism identifiers | ✅ Hit | N/A (single-source) | Re-ranker promoted the case definition chunk over a treatment chunk |
+| 6 | How does the WHO 2018 recommended dosing schedule for TCV compare with the immunogenicity findings reported in the Lancet 2019 trial? | WHO Typhoid Guidelines 2018 **+** Lancet 2019 | Single-dose at ≥ 6 months (WHO p.18); 81.6% seroconversion at 12 months post single dose (Lancet p.7) | Pending evaluation — requires both source files | 🔲 Not yet run | Target ≥ 0.8 | Cross-doc synthesis test: answer is incomplete if either source is absent from citations |
+| 7 | Contrast the typhoid incidence burden in Sub-Saharan Africa (GBD 2019) with the WHO recommendation on vaccination priority for high-burden regions (WHO Guidelines 2018). | GBD Typhoid 2019 **+** WHO Typhoid Guidelines 2018 | Sub-Saharan Africa: 125/100,000 (GBD p.4); WHO recommends priority rollout in regions > 100/100,000 (WHO p.5) | Pending evaluation — requires both source files | 🔲 Not yet run | Target ≥ 0.8 | Cross-doc synthesis test: confirms retrieval diversity, not single-PDF saturation |
 
 ---
 
@@ -230,6 +249,8 @@ pytest tests/ -v
 - System does not handle **scanned PDFs** (non-OCR). Add `pytesseract` + `pdf2image` for OCR support if needed.
 - ChromaDB does not support **incremental updates** well for large batch replacements; delete the `db/chroma/` folder and re-ingest when adding new PDFs.
 - Re-ranker (Voyage AI) is optimized for English; queries in other languages should be translated before querying.
+- **Cross-document synthesis measurement**: the retrieval pipeline has no per-source diversity cap (`top_k=10` with no ceiling per file). On a small corpus (< 5 PDFs), all 10 retrieved chunks may come from one document, producing a plausible-sounding but single-source answer to a cross-document question. The evaluation table now includes two dedicated cross-doc synthesis cases (Q6, Q7) with a **Cross-Doc Recall** metric. If Cross-Doc Recall < 0.8 on those cases, consider adding a per-source cap (e.g., max 3 chunks per `source_file`) in `retrieval.py`.
+- **Abbreviation and metadata priority in BM25**: medical documents define abbreviations once (e.g., "typhoid conjugate vaccine (TCV)") and then use only the short form. Prior to this fix, BM25 treated "TCV" and "typhoid conjugate vaccine" as disjoint tokens, causing zero recall when query and chunk used different forms. **Mitigation applied** (see Error Analysis): `chunking.py` now augments each chunk with inline expansion hints (`[TCV: typhoid conjugate vaccine]`), and `retrieval.py` expands query abbreviations using a persisted map (`db/chroma/abbreviations.json`) before BM25 scoring. Document-level metadata (titles, section headers) still receive no priority weighting; if this becomes a precision issue, consider storing titles as a separate ChromaDB collection with boosted retrieval weight.
 
 ---
 

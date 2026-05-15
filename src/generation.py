@@ -75,10 +75,12 @@ def stream_answer_groq(
 def answer(api_key: str, model: str, question: str, chunks: list[dict]) -> dict:
     """Synchronous call for CLI use."""
     parts = list(stream_answer_groq(api_key, model, question, chunks))
+    unique_sources = len({c["source_file"] for c in chunks})
     return {
         "answer": "".join(parts),
         "citations": [
             {"source_file": c["source_file"], "page_number": c["page_number"]}
             for c in chunks
         ],
+        "unique_sources_retrieved": unique_sources,
     }

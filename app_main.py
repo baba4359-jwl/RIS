@@ -33,13 +33,14 @@ def _index_uploaded_files(files) -> tuple[int, int]:
         progress.progress((i + 1) / (len(files) * 3), text=f"Parsed: {uf.name}")
 
     progress.progress(0.40, text="Chunking documents…")
-    chunks = chunk_documents(all_docs)
+    chunks, abbrev_map = chunk_documents(all_docs)
 
     progress.progress(0.55, text=f"Embedding {len(chunks)} chunks…")
     embeddings = embed_texts([c.text for c in chunks])
 
     progress.progress(0.92, text="Indexing in ChromaDB…")
     vector_store.upsert(chunks, embeddings, DB_PATH)
+    vector_store.save_abbrev_map(abbrev_map, DB_PATH)
 
     progress.progress(1.0, text="Done!")
     time.sleep(0.4)
