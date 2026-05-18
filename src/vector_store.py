@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 
+os.environ.setdefault("ANONYMIZED_TELEMETRY", "False")
 import chromadb
 from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
